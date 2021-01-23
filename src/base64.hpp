@@ -1,5 +1,5 @@
 #ifndef _SMARTHOME_BASE64_HPP_
-#define __SMARTHOME_BASE64_HPP_
+#define _SMARTHOME_BASE64_HPP_
 
 #include <string>
 

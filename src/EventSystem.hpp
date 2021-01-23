@@ -1,5 +1,6 @@
+#ifndef _EVENTSYSTEM_HPP_
+#define _EVENTSYSTEM_HPP_
 
-#pragma once
 #include <unordered_map>
 #include <functional>
 
@@ -47,3 +48,4 @@ class EventCallbackList {
   std::unordered_map<int, List<Args...>> callbackMap;
 };
 }  // namespace callback
+#endif

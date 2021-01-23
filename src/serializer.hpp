@@ -1,6 +1,5 @@
-// #ifndef _PAINLESS_MESH_SERIALIZER_HPP_
-// #define _PAINLESS_MESH_SERIALIZER_HPP_
-#pragma once
+#ifndef _SERIALIZER_HPP_
+#define _SERIALIZER_HPP_
 
 #include <string>
 #include <type_traits>
@@ -72,4 +71,4 @@ void SerializeHelper::serialize(const T* source, std::string& str, int& offset) 
   InternalSerializer<T>::serialize(source, str, offset);
 }
 
-// #endif
+#endif
