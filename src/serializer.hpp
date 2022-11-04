@@ -47,9 +47,6 @@ struct InternalSerializer<std::string, void> {
     offset += length;
   }
   static void serialize(const std::string* source, std::string& str, int& offset) {
-#ifdef ESP8266
-    // gdb_do_break();
-#endif
     uint16_t length = source->size();
     uint32_t neededSpace = offset + length + sizeof(length);
     if (str.size() < neededSpace) str.resize(neededSpace);
