@@ -22,6 +22,10 @@ namespace esptility
     {
     }
 
+    string::string(const std::string &str) : string(str.data(), str.length())
+    {
+    }
+
     string::string(const char *text, size_t size)
     {
         _length = size;
@@ -49,7 +53,6 @@ namespace esptility
         for (size_t i = blockIndex; i <= targetBlockIndex; i++)
         {
             auto toCopy = std::min(STRINGBLOCKSIZE - index, length);
-            Serial.printf("Copy %d bytes into %d index in %d block. Capacity: %d, Length: %d\n", toCopy, index, i, blockLength(), size());
             // gdb_do_break();
             memcpy(&(_myStrings[i][index]), src, toCopy);
             // gdb_do_break();
@@ -58,7 +61,6 @@ namespace esptility
             src = src + toCopy;
             copied += toCopy;
         }
-        Serial.printf("Copied %d bytes\n", copied);
         return copied;
     }
 
@@ -100,6 +102,14 @@ namespace esptility
             length -= toCopy;
         }
         return copied - destOffset;
+    }
+
+    string string::substr(size_t offset, size_t count) const
+    {
+        string str;
+        str.reserve(count);
+        copy(str, offset, 0, count);
+        return str;
     }
 
     size_t string::length() const
@@ -152,6 +162,11 @@ namespace esptility
         push_back_unsafe(c);
     }
 
+    char *string::get_block(size_t index) const
+    {
+        return this->_myStrings[index];
+    }
+
     void string::replace(const char c, size_t index)
     {
         size_t blockIndex = index / STRINGBLOCKSIZE;
@@ -168,6 +183,48 @@ namespace esptility
     size_t string::blockLength() const
     {
         return _myStrings.size();
+    }
+    string &string::erase(size_t pos, size_t len)
+    {
+        size_t startBlockIndex = pos / STRINGBLOCKSIZE;
+        size_t startIndex = pos % STRINGBLOCKSIZE;
+
+        auto sumLen = std::min(pos + len, length());
+
+        _length -= len;
+        for (size_t i = pos; i < length(); i++)
+        {
+            replace((*this)[i + len], i);
+        }
+        return *this;
+    }
+
+    void string::moveBack(int index, size_t count)
+    {
+        reserve(length() + count);
+        for (int i = length() - 1; i >= index; i--)
+        {
+            this->operator[](i + count) = (*this)[i];
+        }
+        _length = length() + count;
+    }
+
+    void string::insert(size_t index, size_t count, const char c)
+    {
+        moveBack(index, count);
+        for (size_t i = index; i < count + index; i++)
+        {
+            (*this).operator[](i) = c;
+        }
+    }
+
+    void string::insert(size_t index, const char *c, size_t count)
+    {
+        moveBack(index, count);
+        for (size_t i = index; i < count + index; i++)
+        {
+            (*this).operator[](i) = c[i - index];
+        }
     }
 
     int string::compareBlocks(size_t blockIndex, const string &other) const
@@ -202,6 +259,11 @@ namespace esptility
             p.write(str, toWrite);
         }
         return size;
+    }
+    string &string::operator=(string &&other){
+        _myStrings = std::move(other._myStrings);
+        _length = other._length;
+        return *this;
     }
 
     string &string::operator=(const string &other)
@@ -247,6 +309,15 @@ namespace esptility
     {
         return other.length() != length() || (*this <=> other) != 0;
     }
+    bool string::operator==(const char *other) const
+    {
+        return strlen(other) == length() && (*this <=> other) == 0;
+    }
+
+    bool string::operator!=(const char *other) const
+    {
+        return strlen(other) != length() || (*this <=> other) != 0;
+    }
 
     string &string::operator<<(const string &s)
     {
@@ -254,19 +325,13 @@ namespace esptility
     }
     char &string::operator[](const size_t index) const
     {
-        string newString = *this;
-
         size_t blockIndex = index / STRINGBLOCKSIZE;
         size_t arrIndex = index % STRINGBLOCKSIZE;
         return _myStrings[blockIndex][arrIndex];
     }
     char &string::operator[](const int index) const
     {
-        string newString = *this;
-
-        size_t blockIndex = index / STRINGBLOCKSIZE;
-        size_t arrIndex = index % STRINGBLOCKSIZE;
-        return _myStrings[blockIndex][arrIndex];
+        return this->operator[]((size_t)index);
     }
 
     int string::operator<=>(const string &other) const
@@ -276,6 +341,16 @@ namespace esptility
             auto comparison = compareBlocks(i, other);
             if (comparison != 0)
                 return comparison;
+        }
+        return 0;
+    }
+    int string::operator<=>(const char *other) const
+    {
+        for (size_t i = 0; i < std::min(length(), strlen(other)); i++)
+        {
+            auto innerComparison = this->operator[](i) - other[i];
+            if (innerComparison != 0)
+                return innerComparison;
         }
         return 0;
     }

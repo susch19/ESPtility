@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <Printable.h>
 #include <Arduino.h>
-#include <GDBStub.h>
+// #include <GDBStub.h>
 
 #ifndef STRINGBLOCKSIZE
-#define STRINGBLOCKSIZE 32
+#define STRINGBLOCKSIZE 64
 #endif
 template <typename T>
 int sgn(T val)
@@ -27,7 +27,7 @@ namespace esptility
         size_t _length;
 
     public:
-        string() : _length(0), _myStrings() {}
+        string() : _myStrings(), _length(0) {}
         string(string &&other) = default;
         string(const string &other);
 
@@ -36,6 +36,7 @@ namespace esptility
         string(const char *text, size_t size);
 
         string(const String &str);
+        string(const std::string &str);
 
         size_t length() const;
         size_t size() const;
@@ -45,22 +46,35 @@ namespace esptility
         void append(const char *text, size_t size);
         void append(const string &other);
 
+        string substr(size_t offset, size_t count) const;
+
         void resize(size_t size);
 
         void reserve(size_t size);
 
         void push_back(const char c);
         void replace(const char c, size_t index);
+        void insert(size_t index, size_t count, const char c);
+        void insert(size_t index, const char *c, size_t count);
+
+        char *get_block(size_t index) const;
+
+        string &erase(size_t pos, size_t len);
 
         string operator+(const string &other) const;
         string &operator+=(const string &other);
         string &operator+=(const char other);
 
         string &operator=(const string &other);
+        string &operator=(string &&other);
 
         bool operator==(const string &other) const;
         bool operator!=(const string &other) const;
+        bool operator==(const char *other) const;
+        bool operator!=(const char *other) const;
+
         int operator<=>(const string &other) const;
+        int operator<=>(const char *other) const;
         int compareBlocks(size_t blockIndex, const string &other) const;
 
         char &operator[](const size_t index) const;
@@ -101,6 +115,7 @@ namespace esptility
     private:
         void push_back_unsafe(const char c);
 
+        void moveBack(int index, size_t count);
         void clear();
 
         size_t blockLength() const;

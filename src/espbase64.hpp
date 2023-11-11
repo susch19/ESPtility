@@ -7,7 +7,7 @@
 namespace base64
 {
 
-    static inline bool is_base64(unsigned char c)
+    static inline bool is_base64(uint8_t c)
     {
         return (isalnum(c) || (c == '+') || (c == '/'));
     }
@@ -17,14 +17,14 @@ namespace base64
         "abcdefghijklmnopqrstuvwxyz"
         "0123456789+/";
 
-    inline std::string encodeStd(unsigned char const *bytes_to_encode,
+    inline std::string encodeStd(uint8_t const *bytes_to_encode,
                                  unsigned int in_len)
     {
         std::string ret;
         int i = 0;
         int j = 0;
-        unsigned char char_array_3[3];
-        unsigned char char_array_4[4];
+        uint8_t char_array_3[3];
+        uint8_t char_array_4[4];
 
         while (in_len--)
         {
@@ -66,7 +66,7 @@ namespace base64
 
     inline std::string encodeStd(const std::string &str64)
     {
-        return encodeStd((unsigned char *)str64.c_str(), str64.length());
+        return encodeStd((uint8_t *)str64.c_str(), str64.length());
     }
 
     static const int B64index[256] =
@@ -86,7 +86,7 @@ namespace base64
         if (len == 0)
             return "";
 
-        unsigned char *p = (unsigned char *)data;
+        uint8_t *p = (uint8_t *)data;
         size_t j = 0,
                pad1 = len % 4 || p[len - 1] == '=',
                pad2 = pad1 && (len % 4 > 2 || p[len - 2] != '=');
@@ -94,7 +94,7 @@ namespace base64
 
         std::string result(last / 4 * 3 + pad1 + pad2, '\0');
 
-        unsigned char *str = (unsigned char *)&result[0];
+        uint8_t *str = (uint8_t *)&result[0];
 
         for (size_t i = 0; i < last; i += 4)
         {
@@ -135,12 +135,12 @@ namespace base64
         int i = 0;
         int j = 0;
         size_t offset = 0;
-        unsigned char char_array_3[3];
-        unsigned char char_array_4[4];
+        uint8_t char_array_3[3];
+        uint8_t char_array_4[4];
 
         while (in_len--)
         {
-            char_array_3[i++] = toEncode[offset++];
+            char_array_3[i++] = (uint8_t)toEncode[offset++];
             if (i == 3)
             {
                 char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
@@ -190,29 +190,29 @@ namespace base64
             return "";
 
         auto p = data;
-        size_t j = 0,
-               pad1 = len % 4 || p[len - 1] == '=',
-               pad2 = pad1 && (len % 4 > 2 || p[len - 2] != '=');
+        size_t
+            pad1 = len % 4 || p[len - 1] == '=',
+            pad2 = pad1 && (len % 4 > 2 || p[len - 2] != '=');
         const size_t last = (len - pad1) / 4 << 2;
 
         esptility::string result;
-        //result.reserve(last / 4 * 3 + pad1 + pad2);
+        // result.reserve(last / 4 * 3 + pad1 + pad2);
 
         for (size_t i = 0; i < last; i += 4)
         {
-            int n = B64index[p[i]] << 18 | B64index[p[i + 1]] << 12 | B64index[p[i + 2]] << 6 | B64index[p[i + 3]];
+            int n = B64index[(uint8_t)p[i]] << 18 | B64index[(uint8_t)p[i + 1]] << 12 | B64index[(uint8_t)p[i + 2]] << 6 | B64index[(uint8_t)p[i + 3]];
             result += n >> 16;
-            result+= n >> 8 & 0xFF;
-            result+= n & 0xFF;
+            result += n >> 8 & 0xFF;
+            result += n & 0xFF;
         }
         if (pad1)
         {
-            int n = B64index[p[last]] << 18 | B64index[p[last + 1]] << 12;
-            result+= n >> 16;
+            int n = B64index[(uint8_t)p[last]] << 18 | B64index[(uint8_t)p[last + 1]] << 12;
+            result += n >> 16;
             if (pad2)
             {
                 n |= B64index[p[last + 2]] << 6;
-                result+= n >> 8 & 0xFF;
+                result += n >> 8 & 0xFF;
             }
         }
         resLen = result.length();
